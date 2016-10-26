@@ -24,7 +24,7 @@ VCF={Your favorite VCF}
 --out example_regions_tree.pdf
 ~~~~
 
-If the plot is not readable, you can change the dimensions with the --height and --width arguments.  Defaults are 10 and 7 inches, respectively
+If the plot is not readable, you can change the dimensions with the --height and --width arguments.  Defaults are 10 and 7 inches, respectively.
 
 # Merging VCF
 ~~~~
