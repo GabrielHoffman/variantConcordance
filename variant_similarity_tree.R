@@ -40,7 +40,7 @@ opt$discordance_pairs = gsub(".pdf$", "", opt$out)
 
 cmd = paste0(cmd, "bcftools view ", regions, " ", opt$vcf, " | bcftools gtcheck -G1 -p", opt$discordance_pairs)
 
-if( ! is.null(opt$plotOnly) ){
+if( is.null(opt$plotOnly) ){
 	cat("Computing concordance...\n")
 	# run command
 	system(cmd)
