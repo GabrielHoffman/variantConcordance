@@ -23,6 +23,7 @@ spec = matrix(c(
 	'height', 	'h', 1, "integer",
 	'width', 	'w', 1, "integer",
 	'rmargin', 	'i', 1, "integer",
+	'plotOnly', 'p', 0, "logical",
 	'out', 		'o', 1, "character"
 ), byrow=TRUE, ncol=4);
 
@@ -39,13 +40,17 @@ opt$discordance_pairs = gsub(".pdf$", "", opt$out)
 
 cmd = paste0(cmd, "bcftools view ", regions, " ", opt$vcf, " | bcftools gtcheck -G1 -p", opt$discordance_pairs)
 
-# run command
-system(cmd)
+if( ! is.null(opt$plotOnly) ){
+	cat("Computing concordance...\n")
+	# run command
+	system(cmd)
+}
 
 # grep sites
 system(paste0('echo -e "CN\tDiscordance\\tnsites\\tAMD\\tsample_i\\tsample_j" >', opt$discordance_pairs, "_2.tab"))
 system(paste0('grep \"^CN\" ', opt$discordance_pairs, ".tab | sed 's/pholder/_/g' >>", opt$discordance_pairs, "_2.tab"))
 
+cat("Reading concordance results...\n")
 # read discordance scores
 data = read_tsv(paste0(opt$discordance_pairs, "_2.tab"))
 
