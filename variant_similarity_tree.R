@@ -14,6 +14,7 @@
 #######
 suppressPackageStartupMessages(library(getopt))
 suppressPackageStartupMessages(library(ape))
+suppressPackageStartupMessages(library(compiler))
 suppressPackageStartupMessages(library(readr))
 
 spec = matrix(c(
@@ -24,10 +25,15 @@ spec = matrix(c(
 	'width', 	'w', 1, "integer",
 	'rmargin', 	'i', 1, "integer",
 	'plotOnly', 'p', 0, "logical",
+	'cex', 		'c', 1, "double",
 	'out', 		'o', 1, "character"
 ), byrow=TRUE, ncol=4);
 
 opt = getopt(spec);
+
+if( is.null(opt$cex) ){
+	opt$cex = 1
+}
 
 # Read in sites file
 regions = ''
@@ -51,25 +57,43 @@ system(paste0('echo -e "CN\tDiscordance\\tnsites\\tAMD\\tsample_i\\tsample_j" >'
 system(paste0('grep \"^CN\" ', opt$discordance_pairs, ".tab | sed 's/pholder/_/g' >>", opt$discordance_pairs, "_2.tab"))
 
 cat("Reading concordance results...\n")
-# read discordance scores
-data = read_tsv(paste0(opt$discordance_pairs, "_2.tab"))
 
-# create matrix storing all pairs of discordance
-# use sample names as row/col names
-sampleIDs = sort(unique(c(data$sample_i, data$sample_j)))
-data$sample_i = factor(data$sample_i, sampleIDs)
-data$sample_j = factor(data$sample_j, sampleIDs)
 
-discorMat = matrix(NA, nlevels(data$sample_j), nlevels(data$sample_j))
-rownames(discorMat) = levels(data$sample_j)
-colnames(discorMat) = levels(data$sample_j)
-diag(discorMat) = 1
+getDistanceMatrix = cmpfun(function( file ){
 
-# loop thru all pairs
-for(k in 1:nrow(data)){
-	discorMat[data$sample_i[k], data$sample_j[k]] = data$Discordance[k] / data$nsites[k]
-	discorMat[data$sample_j[k], data$sample_i[k]] = data$Discordance[k] / data$nsites[k]
-}
+	# read discordance scores
+	data = read_tsv( file )
+
+	# create matrix storing all pairs of discordance
+	# use sample names as row/col names
+	sampleIDs = sort(unique(c(data$sample_i, data$sample_j)))
+	data$sample_i = factor(data$sample_i, sampleIDs)
+	data$sample_j = factor(data$sample_j, sampleIDs)
+
+	discorMat = matrix(NA, nlevels(data$sample_j), nlevels(data$sample_j))
+	rownames(discorMat) = levels(data$sample_j)
+	colnames(discorMat) = levels(data$sample_j)
+	diag(discorMat) = 1
+
+	n_rows = nrow(data)
+
+	# loop thru all pairs
+	for(k in 1:nrow(data)){
+
+		if( k %% 1000 == 0 ){
+			cat("\r", k, "/", n_rows, "  ", round(k / n_rows * 100, 1), "%")
+		}
+		discorMat[data$sample_i[k], data$sample_j[k]] = data$Discordance[k] / data$nsites[k]
+		discorMat[data$sample_j[k], data$sample_i[k]] = data$Discordance[k] / data$nsites[k]
+	}
+	cat("\r", k, "/", n_rows, "  ", round(n_rows / n_rows * 100, 1), "%")
+
+	return( discorMat )
+})
+
+discorMat = getDistanceMatrix( paste0(opt$discordance_pairs, "_2.tab") )
+
+
 n_sites = paste(range(data$nsites), collapse=' - ')
 
 
@@ -95,7 +119,7 @@ if( is.null(opt$rmargin)){
 graphics.off()
 pdf( file=opt$out, height=opt$height, width=opt$width)
 par(mar=c(5,1,1,opt$rmargin))
-plot(as.dendrogram(hcl), horiz=TRUE, xlab="Discordance", main=opt$main)
+plot(as.dendrogram(hcl), horiz=TRUE, xlab="Discordance", main=opt$main, cex=opt$cex)
 abline(v=0.01, lty=2, col="grey", lwd=2)
 abline(v=0.05, lty=3, col="grey", lwd=2)
 legend("topleft", legend=c("1%", "5%"), lty=2:3, col="grey", lwd=2, bty='n')
