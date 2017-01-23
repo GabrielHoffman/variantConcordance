@@ -50,11 +50,12 @@ if( is.null(opt$plotOnly) ){
 	cat("Computing concordance...\n")
 	# run command
 	system(cmd)
+
+	# grep sites
+	system(paste0('echo -e "CN\tDiscordance\\tnsites\\tAMD\\tsample_i\\tsample_j" >', opt$discordance_pairs, "_2.tab"))
+	system(paste0('grep \"^CN\" ', opt$discordance_pairs, ".tab | sed 's/pholder/_/g' >>", opt$discordance_pairs, "_2.tab"))
 }
 
-# grep sites
-system(paste0('echo -e "CN\tDiscordance\\tnsites\\tAMD\\tsample_i\\tsample_j" >', opt$discordance_pairs, "_2.tab"))
-system(paste0('grep \"^CN\" ', opt$discordance_pairs, ".tab | sed 's/pholder/_/g' >>", opt$discordance_pairs, "_2.tab"))
 
 cat("Reading concordance results...\n")
 
