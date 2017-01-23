@@ -92,15 +92,13 @@ getDistanceMatrix = cmpfun(function( file ){
 
 	n_sites = paste(range(data$nsites), collapse=' - ')
 
-	return( list(discorMat, n_sites) )
+	return( list(discorMat = discorMat, n_sites = n_sites) )
 })
 
 res = getDistanceMatrix( paste0(opt$discordance_pairs, "_2.tab") )
 
 discorMat = res$discorMat
 n_sites = res$n_sites
-
-
 
 # image and subset of matrix
 # image(discorMat)
