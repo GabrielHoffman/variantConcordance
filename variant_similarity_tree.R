@@ -131,8 +131,8 @@ if( is.null(opt$rmargin)){
 	opt$rmargin = 13
 }
 
-opt$cex = .6
-opt$height = 150
+# opt$cex = .6
+# opt$height = 150
 
 graphics.off()
 pdf( file=opt$out, height=opt$height, width=opt$width)
@@ -154,7 +154,7 @@ if( ! is.null(opt$class) & file.exists(opt$class) ){
 
 	for( i in 1:ncol(discorMat)){
 		if( i %% 50 ==0 ){
-			cat("\r", i, "/", ncol(discorMat), "   ",  paste(format(i / ncol(discorMat) * 100, digits=3), "%"))
+			cat("\r", i, "/", ncol(discorMat), "   ",  paste(format(i / ncol(discorMat) * 100, digits=3), "%"), "\t")
 		}
 
 		for( class in levels(info$Class) ){
