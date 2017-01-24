@@ -21,6 +21,7 @@ spec = matrix(c(
 	'vcf', 		'v', 1, "character",
 	'regions', 	'r', 1, "character",
 	'main', 	'm', 1, "character",
+	'class', 	'l', 1, "character",
 	'height', 	'h', 1, "integer",
 	'width', 	'w', 1, "integer",
 	'rmargin', 	'i', 1, "integer",
@@ -58,7 +59,6 @@ if( is.null(opt$plotOnly) ){
 
 
 cat("Reading concordance results...\n")
-
 
 getDistanceMatrix = cmpfun(function( file ){
 
@@ -99,13 +99,14 @@ getDistanceMatrix = cmpfun(function( file ){
 
 	n_sites = paste(range(data$nsites), collapse=' - ')
 
-	return( list(discorMat = discorMat, n_sites = n_sites) )
+	return( list(discorMat = discorMat, n_sites = n_sites, data=data) )
 })
 
 res = getDistanceMatrix( paste0(opt$discordance_pairs, "_2.tab") )
 
 discorMat = res$discorMat
 n_sites = res$n_sites
+data = res$data
 
 cat("# NAN: ", sum(is.nan(discorMat)), "\n")
 cat("# 0.5: ", sum(discorMat == 0.5), "\n\n")
@@ -143,4 +144,41 @@ legend("topleft", legend=c("1%", "5%"), lty=2:3, col="grey", lwd=2, bty='n')
 legend("bottomleft", legend=paste0("# sites:", n_sites), bty='n')
 dev.off()
 
+if( ! is.null(opt$class) & file.exists(opt$class) ){
 
+	cat("Writing summary file...\n")
+	info = read.table( opt$class, header=TRUE)
+	info$Sample = as.character(info$Sample)
+
+	result = c()
+
+	for( i in 1:ncol(discorMat)){
+		if( i %% 50 ==0 ){
+			cat("\r", i, "/", ncol(discorMat), "   ",  paste(format(i / ncol(discorMat) * 100, digits=3), "%"))
+		}
+
+		for( class in levels(info$Class) ){
+
+			idx = match(with(info, Sample[Class==class]), colnames(discorMat))
+
+			if( sum(!is.na(idx)) == 0){
+				next
+			}
+
+			k = which.min( discorMat[i,idx])
+
+			id = colnames(discorMat)[i]
+			id2 = colnames(discorMat)[idx[k]]
+
+			nSites = with(data, nsites[(sample_i %in% c(id, id2)) &  (sample_j %in% c(id, id2))])
+
+			value = c(Sample = colnames(discorMat)[i], CompareToClass = class, BestMatchInClass=id2, 
+				Discordance = format(discorMat[i,idx[k]], digits=2), nSites = nSites)
+
+			result = rbind(result, value)
+		}
+	}
+	cat("\r", i, "/", ncol(discorMat), "   ",  paste(format(i / ncol(discorMat) * 100, digits=3), "%"))
+
+	write.table( result, paste0(opt$discordance_pairs, "_results.tsv"), quote=FALSE, row.names=FALSE, sep="\t")
+}
