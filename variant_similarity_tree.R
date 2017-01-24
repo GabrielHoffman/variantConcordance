@@ -71,23 +71,29 @@ getDistanceMatrix = cmpfun(function( file ){
 	data$sample_i = factor(data$sample_i, sampleIDs)
 	data$sample_j = factor(data$sample_j, sampleIDs)
 
-	discorMat = matrix(NA, nlevels(data$sample_j), nlevels(data$sample_j))
+	discorMat = matrix(.5, nlevels(data$sample_j), nlevels(data$sample_j))
 	rownames(discorMat) = levels(data$sample_j)
 	colnames(discorMat) = levels(data$sample_j)
 	diag(discorMat) = 1
 
-	n_rows = nrow(data)
+	idx = which(data$nsites != 0)
+	n_rows = length(idx)
 
 	# loop thru all pairs
-	for(k in 1:nrow(data)){
+	for(k in idx ){
 
-		if( k %% 1000 == 0 ){
-			cat("\r", k, "/", n_rows, "  ", round(k / n_rows * 100, 1), "%")
+		if( k %% 3000 == 0 ){
+			cat("\r", match(k, idx), "/", n_rows, "  ", round(match(k, idx) / n_rows * 100, 1), "%")
 		}
-		discorMat[data$sample_i[k], data$sample_j[k]] = data$Discordance[k] / data$nsites[k]
-		discorMat[data$sample_j[k], data$sample_i[k]] = data$Discordance[k] / data$nsites[k]
+
+		value = data$Discordance[k] / data$nsites[k]
+
+		value = ifelse( is.nan(value), .5, value)
+
+		discorMat[data$sample_i[k], data$sample_j[k]] = value
+		discorMat[data$sample_j[k], data$sample_i[k]] = value
 	}
-	cat("\r", k, "/", n_rows, "  ", round(n_rows / n_rows * 100, 1), "%")
+	cat("\r", match(k, idx), "/", n_rows, "  ", round(n_rows / n_rows * 100, 1), "%")
 
 	# discorMat[data$sample_i, data$sample_j] = with(data, Discordance / nsites)
 
@@ -100,6 +106,8 @@ res = getDistanceMatrix( paste0(opt$discordance_pairs, "_2.tab") )
 
 discorMat = res$discorMat
 n_sites = res$n_sites
+
+cat("# NAN: ", sum(is.nan(discorMat)))
 
 # image and subset of matrix
 # image(discorMat)
@@ -120,10 +128,13 @@ if( is.null(opt$rmargin)){
 	opt$rmargin = 13
 }
 
+opt$cex = .6
+opt$height = 150
+
 graphics.off()
 pdf( file=opt$out, height=opt$height, width=opt$width)
-par(mar=c(5,1,1,opt$rmargin))
-plot(as.dendrogram(hcl), horiz=TRUE, xlab="Discordance", main=opt$main, cex=opt$cex)
+par(mar=c(5,1,1,opt$rmargin), cex=opt$cex)
+plot(as.dendrogram(hcl), horiz=TRUE, xlab="Discordance", main=opt$main)
 abline(v=0.01, lty=2, col="grey", lwd=2)
 abline(v=0.05, lty=3, col="grey", lwd=2)
 legend("topleft", legend=c("1%", "5%"), lty=2:3, col="grey", lwd=2, bty='n')
