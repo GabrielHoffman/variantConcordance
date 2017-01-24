@@ -107,7 +107,9 @@ res = getDistanceMatrix( paste0(opt$discordance_pairs, "_2.tab") )
 discorMat = res$discorMat
 n_sites = res$n_sites
 
-cat("# NAN: ", sum(is.nan(discorMat)))
+cat("# NAN: ", sum(is.nan(discorMat)), "\n")
+cat("# 0.5: ", sum(discorMat == 0.5), "\n\n")
+
 
 # image and subset of matrix
 # image(discorMat)
