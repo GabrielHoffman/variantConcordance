@@ -178,7 +178,7 @@ if( ! is.null(opt$class) & file.exists(opt$class) ){
 			result = rbind(result, value)
 		}
 	}
-	cat("\r", i, "/", ncol(discorMat), "   ",  paste(format(i / ncol(discorMat) * 100, digits=3), "%"))
+	cat("\r", i, "/", ncol(discorMat), "   ",  paste(format(i / ncol(discorMat) * 100, digits=3), "%"), "\n\n")
 
 	write.table( result, paste0(opt$discordance_pairs, "_results.tsv"), quote=FALSE, row.names=FALSE, sep="\t")
 }
