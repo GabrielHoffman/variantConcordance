@@ -93,7 +93,7 @@ getDistanceMatrix = cmpfun(function( file ){
 		discorMat[data$sample_i[k], data$sample_j[k]] = value
 		discorMat[data$sample_j[k], data$sample_i[k]] = value
 	}
-	cat("\r", match(k, idx), "/", n_rows, "  ", round(n_rows / n_rows * 100, 1), "%")
+	cat("\r", match(k, idx), "/", n_rows, "  ", round(n_rows / n_rows * 100, 1), "%", "\n\n")
 
 	# discorMat[data$sample_i, data$sample_j] = with(data, Discordance / nsites)
 
